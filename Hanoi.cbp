@@ -13,7 +13,17 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="include" />
+					<Add directory="SFML-2.3/include" />
 				</Compiler>
+				<Linker>
+					<Add library="SFML-2.3\lib\libsfml-audio-d.a" />
+					<Add library="SFML-2.3\lib\libsfml-graphics-d.a" />
+					<Add library="SFML-2.3\lib\libsfml-system-d.a" />
+					<Add library="SFML-2.3\lib\libsfml-window-d.a" />
+					<Add directory="SFML-2.3/bin" />
+					<Add directory="SFML-2.3/lib" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/Hanoi" prefix_auto="1" extension_auto="1" />
@@ -22,9 +32,17 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="include" />
+					<Add directory="SFML-2.3/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="SFML-2.3\lib\libsfml-audio.a" />
+					<Add library="SFML-2.3\lib\libsfml-graphics.a" />
+					<Add library="SFML-2.3\lib\libsfml-system.a" />
+					<Add library="SFML-2.3\lib\libsfml-window.a" />
+					<Add directory="SFML-2.3/bin" />
+					<Add directory="SFML-2.3/lib" />
 				</Linker>
 			</Target>
 		</Build>
@@ -32,7 +50,13 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="include/button.h" />
+		<Unit filename="include/disc.h" />
+		<Unit filename="include/rod.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/button.cpp" />
+		<Unit filename="src/disc.cpp" />
+		<Unit filename="src/rod.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -5,12 +5,17 @@
 #include <string>
 
 class button{
+    sf::FloatRect bounds;
     sf::Texture texture;
-    sf::Sprite sprite;
+    sf::Sprite button;
+    sf::Vector2i cursorPosition;
+    sf::Vector2f buttonPosition;
 
     public:
-        void load(const std::string& fileName, int xCoordinate, int yCoordinate, int width, int height);
+        void load(const std::string& fileName, int width, int height, int xCoordinate, int yCoordinate);
         void draw(sf::RenderWindow& window);
+
+        bool isMouseOverSprite(sf::RenderWindow& window);
 };
 
 #endif
