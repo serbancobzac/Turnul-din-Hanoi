@@ -9,21 +9,26 @@ sf::Event event;
 sf::Font font1, font2;
 sf::Text text;
 sf::Image screenshot;
-sf::Clock timer;
-sf::Texture blurredBackgroundTexture, inputBoxTexture, titleTexture;
-sf::Sprite  blurredBackground, inputBox, title;
+sf::Texture image, blurredBackgroundTexture, inputBoxTexture, titleTexture, descriereTextTexture, instructiuniTextTexture,
+            solutieTextTexture, codTextTexture;
+sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText;
 sf::Vector2f cursorPosition;
+
 button  invataButton, invataButtonActive, joacaButton, joacaButtonActive, simuleazaButton, simuleazaButtonActive,
-        numarDiscuri, exitButton, exitButtonActive, instructiuniButton, instructiuniButtonActive;
+        numarDiscuri, exitButton, exitButtonActive, instructiuniButton, instructiuniButtonActive,
+        descriereButton, descriereButtonActive, solutieButton, solutieButtonActive, aiciButton;
 
 int numberOfDiscs;
 
 void loadResources();
 void menu(sf::RenderWindow& window);
+void updateButtonState();
 void showInvata();
 int displayBox();
+
 void launchGame(int numberOfDiscs);
 void succesGameScreen();
+
 void launchSimulation(int numberOfDiscs);
 void succesSimulationScreen();
 
@@ -42,14 +47,14 @@ int main(){
                         if(invataButtonActive.isMouseOverSprite(window))
                             showInvata();
                         if(joacaButtonActive.isMouseOverSprite(window)){
-                            numberOfDiscs=displayBox();
+                            numberOfDiscs = displayBox();
                             if(numberOfDiscs){
                                 launchGame(numberOfDiscs);
                                 succesGameScreen();
                             }
                         }
                         if(simuleazaButtonActive.isMouseOverSprite(window)){
-                            numberOfDiscs=displayBox();
+                            numberOfDiscs = displayBox();
                             if(numberOfDiscs){
                                 launchSimulation(numberOfDiscs);
                                 succesSimulationScreen();
@@ -65,6 +70,7 @@ int main(){
 }
 
 void loadResources(){
+    // menu
     menuMusic.openFromFile("./files/audio/menu.wav");
     menuMusic.setVolume(50);
     menuMusic.setLoop(true);
@@ -98,6 +104,35 @@ void loadResources(){
     text.setCharacterSize(96);
     text.setPosition(560, 430);
     text.setColor(sf::Color(246, 156, 14));
+
+    // invata
+    descriereButton.load("./files/images/descriereButton.png", 250, 100, 160, 60);
+    descriereButtonActive.load("./files/images/descriereButtonActive.png", 250, 100, 160, 60);
+
+    instructiuniButton.load("./files/images/instructiuniButton.png", 250, 100, 410, 60);
+    instructiuniButtonActive.load("./files/images/instructiuniButtonActive.png", 250, 100, 410, 60);
+
+    solutieButton.load("./files/images/solutieButton.png", 200, 100, 635, 60);
+    solutieButtonActive.load("./files/images/solutieButtonActive.png", 200, 100, 635, 60);
+
+    descriereTextTexture.loadFromFile("./files/images/descriereText.png");
+    descriereText.setTexture(descriereTextTexture);
+
+    instructiuniTextTexture.loadFromFile("./files/images/instructiuniText.png");
+    instructiuniText.setTexture(instructiuniTextTexture);
+
+    solutieTextTexture.loadFromFile("./files/images/solutieText.png");
+    solutieText.setTexture(solutieTextTexture);
+
+    aiciButton.load("./files/images/aici.png", 65, 30, 345, 389);
+
+    codTextTexture.loadFromFile("./files/images/codText.png");
+    codText.setTexture(codTextTexture);
+}
+
+void updateButtonState(button Button, button ButtonActive){
+    if(Button.isMouseOverSprite(window)) ButtonActive.draw(window);
+    else Button.draw(window);
 }
 
 void menu(sf::RenderWindow& window){
@@ -105,22 +140,69 @@ void menu(sf::RenderWindow& window){
     window.draw(blurredBackground);
     window.draw(title);
 
-    if(invataButton.isMouseOverSprite(window)) invataButtonActive.draw(window);
-    else invataButton.draw(window);
-
-    if(joacaButton.isMouseOverSprite(window)) joacaButtonActive.draw(window);
-    else joacaButton.draw(window);
-
-    if(simuleazaButton.isMouseOverSprite(window)) simuleazaButtonActive.draw(window);
-    else simuleazaButton.draw(window);
-
-    if(exitButton.isMouseOverSprite(window)) exitButtonActive.draw(window);
-    else exitButton.draw(window);
+    updateButtonState(invataButton, invataButtonActive);
+    updateButtonState(joacaButton, joacaButtonActive);
+    updateButtonState(simuleazaButton, simuleazaButtonActive);
+    updateButtonState(exitButton, exitButtonActive);
 
     window.display();
 }
 
-void showInvata(){}
+void showInvata(){
+    bool pressed = 0, cod = 0;
+    int indicator = 0;
+    while(!pressed){
+        while(window.pollEvent(event))
+            switch (event.type){
+                case sf::Event::Closed:{
+                    window.close(); exit(0);
+                }
+                case sf::Event::MouseButtonPressed:{
+                    if(event.mouseButton.button == sf::Mouse::Left){
+                        if(exitButtonActive.isMouseOverSprite(window)){ pressed = 1; continue;}
+                        if(descriereButtonActive.isMouseOverSprite(window)){ indicator = 0; continue;}
+                        if(instructiuniButtonActive.isMouseOverSprite(window)){ indicator = 1; continue;}
+                        if(solutieButtonActive.isMouseOverSprite(window)){ indicator = 2; cod = 0; continue;}
+                        if(aiciButton.isMouseOverSprite(window) && indicator==2){ cod = 1; continue;}
+                    }
+                }
+                default: break;
+            }
+
+        window.clear();
+        window.draw(blurredBackground);
+
+        if(indicator == 0){
+            window.draw(descriereText);
+            descriereButtonActive.draw(window);
+
+            updateButtonState(instructiuniButton, instructiuniButtonActive);
+            updateButtonState(solutieButton, solutieButtonActive);
+        }
+        else    if(indicator==1){
+                    window.draw(instructiuniText);
+                    instructiuniButtonActive.draw(window);
+
+                    updateButtonState(descriereButton, descriereButtonActive);
+                    updateButtonState(solutieButton, solutieButtonActive);
+                }
+                else{
+                    if(!cod) window.draw(solutieText);
+                    else window.draw(codText);
+                    solutieButtonActive.draw(window);
+
+                    updateButtonState(descriereButton, descriereButtonActive);
+                    updateButtonState(instructiuniButton, instructiuniButtonActive);
+
+                    if(aiciButton.isMouseOverSprite(window) && !cod) aiciButton.draw(window);
+                }
+        updateButtonState(exitButton, exitButtonActive);
+
+        window.display();
+    }
+    sf::Clock timer;
+    while(timer.getElapsedTime().asSeconds() <= 0.25);
+}
 
 int displayBox(){
     bool done = 0;
@@ -139,7 +221,7 @@ int displayBox(){
                 case sf::Event::MouseButtonPressed:
                     if(event.mouseButton.button == sf::Mouse::Left){
                         if(numarDiscuri.isMouseOverSprite(window))
-                            done=1;
+                            done = 1;
                         if(exitButtonActive.isMouseOverSprite(window)){
                             window.close(); exit(0);
                         }
@@ -149,8 +231,8 @@ int displayBox(){
                     if (event.text.unicode>=51 && event.text.unicode<=56) //3-8
                         text.setString((char)event.text.unicode);
                     if (event.text.unicode==13){ //enter
-                        std::string nText=text.getString();
-                        int val=std::atoi(nText.c_str());
+                        std::string nText = text.getString();
+                        int val = std::atoi(nText.c_str());
                         return val;
                     }
                     if (event.text.unicode==8) //backspace
