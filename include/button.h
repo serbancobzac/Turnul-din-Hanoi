@@ -1,10 +1,10 @@
 #ifndef BUTTON_H
 #define BUTTON_H
-#define active 1
-#define inactive 0
 
 #include <SFML/Graphics.hpp>
 #include <string>
+#define active 1
+#define inactive 0
 
 class button{
     sf::FloatRect bounds;

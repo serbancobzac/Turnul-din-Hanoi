@@ -1,11 +1,23 @@
 #include "disc.h"
 
-disc::disc(){}
+disc::disc(){
+    discNumber = xCoordinate = yCoordinate = 0;
+    disk.setOrigin(120, 60);
+    disk.setPosition(0, 0);
+}
 
-void disc::draw(sf::RenderWindow& window){}
+void disc::draw(sf::RenderWindow& window){
+    window.draw(disk);
+}
 
-int disc::getDiscNumber(){}
+void disc::setPosition(int xCoordinate, int yCoordinate){
+    disk.setPosition(xCoordinate, yCoordinate);
+}
 
-void disc::setPosition(int xCoordinate, int yCoordinate){}
-void disc::setDiscTexture(sf::Texture& texture){}
-void disc::setDiscNumber(int number){}
+void disc::setDiscTexture(sf::Texture& texture){
+    disk.setTexture(texture);
+}
+
+void disc::setDiscNumber(int number){
+    discNumber = number;
+}

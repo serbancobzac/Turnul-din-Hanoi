@@ -11,7 +11,7 @@ class disc{
         disc();
         void draw(sf::RenderWindow& window);
 
-        int getDiscNumber();
+        int getDiscNumber(){ return discNumber;}
 
         void setPosition(int xCoordinate, int yCoordinate);
         void setDiscTexture(sf::Texture& texture);

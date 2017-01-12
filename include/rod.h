@@ -9,7 +9,8 @@ class rod{
     std::vector <disc> discs;
     sf::Sprite rodState;
     sf::Texture greenStateTexture, redStateTexture;
-    int xCoordinate, yCoordinate, state, discNumber;
+    int xCoordinate = 0, yCoordinate = 500, state, discNumber;
+    static int difference;
 
     public:
         rod();
@@ -18,8 +19,8 @@ class rod{
         void draw(sf::RenderWindow& window);
         void drawState(sf::RenderWindow& window);
 
-        int getDiscNumber();
-        int getState();
+        int getDiscNumber(){ return discNumber;}
+        int getState(){ return state;}
 
         void changeState(int newState);
 };

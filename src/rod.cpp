@@ -1,13 +1,34 @@
 #include "rod.h"
 
-rod::rod(){}
+int rod::difference = 150;
 
-void addDisc(disc newDisc){}
-void removeDisc(){}
-void draw(sf::RenderWindow& window){}
-void drawState(sf::RenderWindow& window){}
+rod::rod(){
+    discNumber = state = 0;
+    xCoordinate += rod::difference;
+    rod::difference += 250;
+    greenStateTexture.loadFromFile("./files/images/greenRod.png");
+    redStateTexture.loadFromFile("./files/images/redRod.png");
+    rodState.setPosition(xCoordinate-7, 129);
+}
 
-int getDiscNumber(){}
-int getState(){}
+void rod::addDisc(disc newDisc){
+    newDisc.setPosition(xCoordinate+5, yCoordinate-3);
+    yCoordinate -= 40;
+    discs.push_back(newDisc);
+    ++discNumber;
+}
 
-void changeState(int newState){}
+void rod::removeDisc(){
+    yCoordinate += 40;
+    discs.pop_back();
+    --discNumber;
+}
+
+void rod::draw(sf::RenderWindow& window){
+    for(int i = 0; i < discNumber; ++i)
+        discs[i].draw(window);
+}
+
+void rod::drawState(sf::RenderWindow& window){}
+
+void rod::changeState(int newState){}

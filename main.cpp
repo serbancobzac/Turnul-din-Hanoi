@@ -7,17 +7,21 @@ sf::RenderWindow window(sf::VideoMode(800, 600), "Hanoi", sf::Style::Close);
 sf::Music menuMusic, happyEnd;
 sf::Event event;
 sf::Font font1, font2;
-sf::Text text;
+sf::Text text, firstRodIndicator, secondRodIndicator;
 sf::Image screenshot;
+sf::Clock timer;
 sf::Texture blurredBackgroundTexture, inputBoxTexture, titleTexture, descriereTextTexture, instructiuniTextTexture,
-            solutieTextTexture, codTextTexture;
-sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText;
+            solutieTextTexture, codTextTexture, backgroundTexture, arrowTexture;
+sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText, background, arrow;
 sf::Vector2f cursorPosition;
+
+std::vector <rod> rods;
+std::vector <sf::Texture> discs;
 
 button  invataButton, joacaButton, simuleazaButton, numarDiscuri, exitButton,
         instructiuniButton, descriereButton, solutieButton, aiciButton;
 
-int numberOfDiscs;
+int numberOfDiscs, movesCounter;
 
 void loadResources();
 void menu(sf::RenderWindow& window);
@@ -26,10 +30,16 @@ void showInvata();
 int displayBox();
 
 void launchGame(int numberOfDiscs);
+int fromThisRod();
+int toThisRod();
+void moveDisc(int x, int y);
+void removeRemainingDiscs();
 void succesGameScreen();
 
 void launchSimulation(int numberOfDiscs);
 void succesSimulationScreen();
+
+void displayState();
 
 int main(){
     loadResources();
@@ -48,7 +58,7 @@ int main(){
                         if(joacaButton.isMouseOverSprite(window)){
                             numberOfDiscs = displayBox();
                             if(numberOfDiscs){
-                                //launchGame(numberOfDiscs);
+                                launchGame(numberOfDiscs);
                                 succesGameScreen();
                             }
                         }
@@ -120,6 +130,37 @@ void loadResources(){
 
     codTextTexture.loadFromFile("./files/images/codText.png");
     codText.setTexture(codTextTexture);
+
+    //joaca
+    firstRodIndicator.setFont(font2);
+    firstRodIndicator.setCharacterSize(36);
+    firstRodIndicator.setColor(sf::Color(246, 156, 14));
+
+    arrowTexture.loadFromFile("./files/images/arrow.png");
+    arrow.setTexture(arrowTexture);
+    arrow.setOrigin(50, 50);
+    arrow.setPosition(400, 35);
+
+    secondRodIndicator.setFont(font2);
+    secondRodIndicator.setCharacterSize(36);
+    secondRodIndicator.setColor(sf::Color(246, 156, 14));
+
+    std::string name="./files/images/disc.png";
+    for(int i=1; i<=8; ++i){
+        sf::Texture newTexture;
+        name.insert(name.begin()+19, (char)i+48);
+        newTexture.loadFromFile(name);
+        discs.push_back(newTexture);
+        name.erase(name.begin()+19);
+    }
+
+    rod newRod;
+    rods.push_back(newRod);
+    rods.push_back(newRod);
+    rods.push_back(newRod);
+
+    backgroundTexture.loadFromFile("./files/images/background.png");
+    background.setTexture(backgroundTexture);
 }
 
 void updateButtonState(button Button){
@@ -254,8 +295,46 @@ int displayBox(){
 }
 
 void launchGame(int numberOfDiscs){
+    disc newDisc;
+    for(int i = numberOfDiscs-1; i >= 0; --i){
+        newDisc.setDiscTexture(discs[i]);
+        newDisc.setDiscNumber(i+1);
+        rods[0].addDisc(newDisc);
+    }
 
+    displayState();
+
+    timer.restart();
+    while(timer.getElapsedTime().asSeconds() <= 1.5);
+
+    removeRemainingDiscs();
 }
+
+int fromThisRod(){ return 0;}
+int toThisRod(){ return 0;}
+void moveDisc(int x, int y){}
+
+void removeRemainingDiscs(){
+    for(int i = 0; i <= 2; ++i)
+        while(rods[i].getDiscNumber())
+            rods[i].removeDisc();
+}
+
 void succesGameScreen(){}
 void launchSimulation(int numberOfDiscs){}
 void succesSimulationScreen(){}
+
+void displayState(){
+    window.clear();
+    window.draw(background);
+    window.draw(firstRodIndicator);
+    window.draw(arrow);
+    window.draw(secondRodIndicator);
+
+    updateButtonState(exitButton);
+
+    for(int i = 0; i <= 2; ++i)
+        rods[i].draw(window);
+
+    window.display();
+}
