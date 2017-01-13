@@ -452,6 +452,7 @@ void succesGameScreen(){
     window.draw(blurredBackground);
     window.draw(congrats);
     window.draw(moves);
+    window.display();
 
     showUntilKeyPressed();
 
@@ -541,6 +542,7 @@ void succesSimulationScreen(){
     window.draw(done);
     window.draw(text);
     window.draw(moves);
+    window.display();
 
     showUntilKeyPressed();
 
@@ -554,7 +556,7 @@ void succesSimulationScreen(){
 void showUntilKeyPressed(){
     bool pressed = 0;
 
-    while(!pressed){
+    while(!pressed)
         while(window.pollEvent(event))
             switch (event.type){
                 case sf::Event::Closed:{
@@ -562,17 +564,8 @@ void showUntilKeyPressed(){
                 }
                 case sf::Event::KeyPressed:
                     pressed = 1;
-                case sf::Event::MouseButtonPressed:
-                    if(event.mouseButton.button == sf::Mouse::Left &&
-                       exitButton.isMouseOverSprite(window)){
-                        pressed = 1;
-                    }
                 default: break;
             }
-
-        updateButtonState(exitButton);
-        window.display();
-    }
 }
 
 std::string numberToString(int number){
