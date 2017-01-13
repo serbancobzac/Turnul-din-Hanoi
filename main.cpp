@@ -14,8 +14,8 @@ sf::Text text, firstRodIndicator, secondRodIndicator, moves;
 sf::Image screenshot;
 sf::Clock timer;
 sf::Texture blurredBackgroundTexture, inputBoxTexture, titleTexture, descriereTextTexture, instructiuniTextTexture,
-            solutieTextTexture, codTextTexture, backgroundTexture, arrowTexture, congratsTexture;
-sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText, background, arrow, congrats;
+            solutieTextTexture, codTextTexture, backgroundTexture, arrowTexture, congratsTexture, doneTexture;
+sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText, background, arrow, congrats, done;
 sf::Vector2f cursorPosition;
 
 std::vector <rod> rods;
@@ -45,6 +45,7 @@ void launchSimulation(int numberOfDiscs);
 void generateSimulationMoves(int numberOfDiscs, int initialRod, int finalRod);
 void updateMove(sf::Text &rodIndicator, int rod);
 void succesSimulationScreen();
+void showUntilKeyPressed();
 
 std::string numberToString(int number);
 void displayState();
@@ -184,6 +185,8 @@ void loadResources(){
 
     // simulare
     fastForwardButton.load("./files/images/fastForward.png", "./files/images/fastForwardActive.png", 50, 50, 765, 35);
+    doneTexture.loadFromFile("./files/images/done.png");
+    done.setTexture(doneTexture);
 }
 
 void uploadDiscs(std::string name, std::vector <sf::Texture> &discs){
@@ -450,27 +453,7 @@ void succesGameScreen(){
     window.draw(congrats);
     window.draw(moves);
 
-    bool pressed = 0;
-
-    while(!pressed){
-        while(window.pollEvent(event))
-            switch (event.type){
-                case sf::Event::Closed:{
-                    window.close(); exit(0);
-                }
-                case sf::Event::KeyPressed:
-                    pressed = 1;
-                case sf::Event::MouseButtonPressed:
-                    if(event.mouseButton.button == sf::Mouse::Left &&
-                       exitButton.isMouseOverSprite(window)){
-                        pressed=1;
-                    }
-                default: break;
-            }
-
-        updateButtonState(exitButton);
-        window.display();
-    }
+    showUntilKeyPressed();
 
     happyEnd.stop();
     menuMusic.play();
@@ -492,43 +475,40 @@ void launchSimulation(int numberOfDiscs){
 }
 
 void generateSimulationMoves(int numberOfDiscs, int initialRod, int finalRod){
-    while(13){
-        while (window.pollEvent(event))
-            switch (event.type){
-                case sf::Event::Closed:{
-                    window.close(); exit(0);
-                }
-                case sf::Event::MouseButtonPressed:{
-                    if(event.mouseButton.button == sf::Mouse::Left &&
-                       fastForwardButton.isMouseOverSprite(window)) ff = 0;
-                }
-                default: break;
+    while(window.pollEvent(event))
+        switch (event.type){
+            case sf::Event::Closed:{
+                window.close(); exit(0);
             }
-        if(numberOfDiscs > 0){
-            generateSimulationMoves(numberOfDiscs-1, initialRod, 6-initialRod-finalRod);
-
-            firstRodIndicator.setString("");
-            secondRodIndicator.setString("");
-
-            updateMove(firstRodIndicator, initialRod);
-            updateMove(secondRodIndicator, finalRod);
-
-
-            moveDisc(initialRod-1, finalRod-1);
-            ++movesCounter;
-
-
-            rods[initialRod-1].changeTopState(discs[rods[initialRod-1].getTopDiscNumber()-1]);
-            rods[finalRod-1].changeState(0);
-
-            displayState();
-
-            timer.restart();
-            while(ff && timer.getElapsedTime().asSeconds() <= 0.5);
-
-            generateSimulationMoves(numberOfDiscs-1, 6-initialRod-finalRod, finalRod);
+            case sf::Event::MouseButtonPressed:{
+                if(event.mouseButton.button == sf::Mouse::Left &&
+                   fastForwardButton.isMouseOverSprite(window)) ff = 0;
+            }
+            default: break;
         }
-        return;
+    if(numberOfDiscs > 0){
+        generateSimulationMoves(numberOfDiscs-1, initialRod, 6-initialRod-finalRod);
+
+        firstRodIndicator.setString("");
+        secondRodIndicator.setString("");
+
+        updateMove(firstRodIndicator, initialRod);
+        updateMove(secondRodIndicator, finalRod);
+
+
+        moveDisc(initialRod-1, finalRod-1);
+        ++movesCounter;
+
+
+        rods[initialRod-1].changeTopState(discs[rods[initialRod-1].getTopDiscNumber()-1]);
+        rods[finalRod-1].changeState(0);
+
+        displayState();
+
+        timer.restart();
+        while(ff && timer.getElapsedTime().asSeconds() <= 0.5);
+
+        generateSimulationMoves(numberOfDiscs-1, 6-initialRod-finalRod, finalRod);
     }
 }
 
@@ -545,7 +525,55 @@ void updateMove(sf::Text &rodIndicator, int rod){
     while(ff && timer.getElapsedTime().asSeconds() <= 0.5);
 }
 
-void succesSimulationScreen(){}
+void succesSimulationScreen(){
+    s = numberToString(movesCounter);
+    moves.setString(s);
+    moves.setPosition(635, 382);
+
+    text.setFont(font2);
+    text.setCharacterSize(56);
+    text.setOrigin(28, 28);
+    text.setPosition(350, 382);
+    text.setColor(sf::Color(58, 190, 0));
+
+    window.clear();
+    window.draw(blurredBackground);
+    window.draw(done);
+    window.draw(text);
+    window.draw(moves);
+
+    showUntilKeyPressed();
+
+    text.setFont(font1);
+    text.setOrigin(0, 0);
+    text.setCharacterSize(96);
+    text.setPosition(560, 430);
+    text.setColor(sf::Color(246, 156, 14));
+}
+
+void showUntilKeyPressed(){
+    bool pressed = 0;
+
+    while(!pressed){
+        while(window.pollEvent(event))
+            switch (event.type){
+                case sf::Event::Closed:{
+                    window.close(); exit(0);
+                }
+                case sf::Event::KeyPressed:
+                    pressed = 1;
+                case sf::Event::MouseButtonPressed:
+                    if(event.mouseButton.button == sf::Mouse::Left &&
+                       exitButton.isMouseOverSprite(window)){
+                        pressed = 1;
+                    }
+                default: break;
+            }
+
+        updateButtonState(exitButton);
+        window.display();
+    }
+}
 
 std::string numberToString(int number){
     std::stringstream ss;
