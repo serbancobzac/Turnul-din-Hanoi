@@ -2,9 +2,12 @@
 #include "disc.h"
 #include "button.h"
 #include <SFML/Audio.hpp>
+#include <sstream>
 
 sf::RenderWindow window(sf::VideoMode(800, 600), "Hanoi", sf::Style::Close);
 sf::Music menuMusic, happyEnd;
+sf::SoundBuffer takeDiscBuffer, putDiscBuffer;
+sf::Sound takeDisc, putDisc;
 sf::Event event;
 sf::Font font1, font2;
 sf::Text text, firstRodIndicator, secondRodIndicator;
@@ -16,7 +19,7 @@ sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText,
 sf::Vector2f cursorPosition;
 
 std::vector <rod> rods;
-std::vector <sf::Texture> discs;
+std::vector <sf::Texture> discs, activeDiscs;
 
 button  invataButton, joacaButton, simuleazaButton, numarDiscuri, exitButton,
         instructiuniButton, descriereButton, solutieButton, aiciButton;
@@ -24,14 +27,15 @@ button  invataButton, joacaButton, simuleazaButton, numarDiscuri, exitButton,
 int numberOfDiscs, movesCounter;
 
 void loadResources();
+void uploadDiscs(std::string name, std::vector <sf::Texture> &discs);
 void menu(sf::RenderWindow& window);
 void updateButtonState(button Button);
 void showInvata();
 int displayBox();
 
-void launchGame(int numberOfDiscs);
-int fromThisRod();
-int toThisRod();
+bool launchGame(int numberOfDiscs);
+int selectRod();
+void takeDiscFromRod(int rodNumber);
 void moveDisc(int x, int y);
 void removeRemainingDiscs();
 void succesGameScreen();
@@ -39,6 +43,7 @@ void succesGameScreen();
 void launchSimulation(int numberOfDiscs);
 void succesSimulationScreen();
 
+std::string numberToString(int number);
 void displayState();
 
 int main(){
@@ -57,10 +62,9 @@ int main(){
                             showInvata();
                         if(joacaButton.isMouseOverSprite(window)){
                             numberOfDiscs = displayBox();
-                            if(numberOfDiscs){
-                                launchGame(numberOfDiscs);
-                                succesGameScreen();
-                            }
+                            if(numberOfDiscs)
+                                if(launchGame(numberOfDiscs))
+                                    succesGameScreen();
                         }
                         if(simuleazaButton.isMouseOverSprite(window)){
                             numberOfDiscs = displayBox();
@@ -132,8 +136,15 @@ void loadResources(){
     codText.setTexture(codTextTexture);
 
     //joaca
+    takeDiscBuffer.loadFromFile("./files/audio/takeDisc.wav");
+    takeDisc.setBuffer(takeDiscBuffer);
+
+    putDiscBuffer.loadFromFile("./files/audio/putDisc.wav");
+    putDisc.setBuffer(putDiscBuffer);
+
     firstRodIndicator.setFont(font2);
-    firstRodIndicator.setCharacterSize(36);
+    firstRodIndicator.setCharacterSize(70);
+    firstRodIndicator.setPosition(325, -15);
     firstRodIndicator.setColor(sf::Color(246, 156, 14));
 
     arrowTexture.loadFromFile("./files/images/arrow.png");
@@ -142,25 +153,30 @@ void loadResources(){
     arrow.setPosition(400, 35);
 
     secondRodIndicator.setFont(font2);
-    secondRodIndicator.setCharacterSize(36);
+    secondRodIndicator.setCharacterSize(70);
+    secondRodIndicator.setPosition(450, -15);
     secondRodIndicator.setColor(sf::Color(246, 156, 14));
 
-    std::string name="./files/images/disc.png";
+    uploadDiscs("./files/images/disc.png", discs);
+    uploadDiscs("./files/images/discActive.png", activeDiscs);
+
+    rod newRod1, newRod2, newRod3;
+    rods.push_back(newRod1);
+    rods.push_back(newRod2);
+    rods.push_back(newRod3);
+
+    backgroundTexture.loadFromFile("./files/images/background.png");
+    background.setTexture(backgroundTexture);
+}
+
+void uploadDiscs(std::string name, std::vector <sf::Texture> &discs){
+    sf::Texture newTexture;
     for(int i=1; i<=8; ++i){
-        sf::Texture newTexture;
         name.insert(name.begin()+19, (char)i+48);
         newTexture.loadFromFile(name);
         discs.push_back(newTexture);
         name.erase(name.begin()+19);
     }
-
-    rod newRod;
-    rods.push_back(newRod);
-    rods.push_back(newRod);
-    rods.push_back(newRod);
-
-    backgroundTexture.loadFromFile("./files/images/background.png");
-    background.setTexture(backgroundTexture);
 }
 
 void updateButtonState(button Button){
@@ -184,11 +200,11 @@ void menu(sf::RenderWindow& window){
 }
 
 void showInvata(){
-    bool pressed = 0, cod = 0;
+    bool selectedRod = 0, cod = 0;
     int indicator = 0;
     descriereButton.changeState(active);
 
-    while(!pressed){
+    while(!selectedRod){
         while(window.pollEvent(event))
             switch (event.type){
                 case sf::Event::Closed:{
@@ -196,7 +212,7 @@ void showInvata(){
                 }
                 case sf::Event::MouseButtonPressed:{
                     if(event.mouseButton.button == sf::Mouse::Left){
-                        if(exitButton.isMouseOverSprite(window)){ pressed = 1; continue;}
+                        if(exitButton.isMouseOverSprite(window)){ selectedRod = 1; continue;}
                         if(descriereButton.isMouseOverSprite(window)){
                             indicator = 0; descriereButton.changeState(active); continue;}
                         if(instructiuniButton.isMouseOverSprite(window)){
@@ -294,7 +310,7 @@ int displayBox(){
     return 0;
 }
 
-void launchGame(int numberOfDiscs){
+bool launchGame(int numberOfDiscs){
     disc newDisc;
     for(int i = numberOfDiscs-1; i >= 0; --i){
         newDisc.setDiscTexture(discs[i]);
@@ -302,17 +318,101 @@ void launchGame(int numberOfDiscs){
         rods[0].addDisc(newDisc);
     }
 
-    displayState();
+    int x, y;
+    bool finished = 0;
+    movesCounter = 0;
 
-    timer.restart();
-    while(timer.getElapsedTime().asSeconds() <= 1.5);
+    while(rods[2].getDiscNumber() != numberOfDiscs){
+        firstRodIndicator.setString("");
+        secondRodIndicator.setString("");
+
+        x = selectRod();
+        if(x == 3) break;
+
+        y = selectRod();
+        if(y == 3) break;
+
+        moveDisc(x, y);
+        if(x != y) ++movesCounter;
+
+        displayState();
+
+        timer.restart();
+        while(timer.getElapsedTime().asSeconds() <= 0.5);
+    }
+
+    if(rods[2].getDiscNumber() == numberOfDiscs) finished = 1;
 
     removeRemainingDiscs();
+
+    return finished;
 }
 
-int fromThisRod(){ return 0;}
-int toThisRod(){ return 0;}
-void moveDisc(int x, int y){}
+int selectRod(){
+    int selectedRod = 0;
+    while(window.isOpen()){
+        while(window.pollEvent(event))
+            switch(event.type){
+                case sf::Event::Closed:{
+                    window.close(); exit(0);
+                }
+                case sf::Event::TextEntered:{
+                    if(49 <= event.text.unicode && event.text.unicode <= 51){
+                        if((firstRodIndicator.getString()).isEmpty() &&
+                            rods[(event.text.unicode - '0') - 1].getDiscNumber() != 0){
+                            takeDisc.play();
+                            takeDiscFromRod((event.text.unicode - '0') - 1);
+                        }
+                        else if(rods[(event.text.unicode - '0') - 1].getState() == green){
+                            putDisc.play();
+                            secondRodIndicator.setString(numberToString(event.text.unicode - '0'));
+                        }
+                        selectedRod = event.text.unicode - '0';
+                    }
+                }
+                case sf::Event::MouseButtonPressed:{
+                    if(event.mouseButton.button == sf::Mouse::Left &&
+                       exitButton.isMouseOverSprite(window)){
+                        selectedRod = 4;
+                    }
+                }
+                default: break;
+            }
+
+        displayState();
+
+        if(!(secondRodIndicator.getString()).isEmpty()){
+            rods[0].changeState(neutral);
+            rods[1].changeState(neutral);
+            rods[2].changeState(neutral);
+        }
+
+        if(1 <= selectedRod && selectedRod <= 4) return selectedRod - 1;
+    }
+    return 0;
+}
+
+void takeDiscFromRod(int rodNumber){
+    firstRodIndicator.setString(numberToString(rodNumber+1));
+
+    rods[rodNumber].changeTopState(activeDiscs[rods[rodNumber].getTopDiscNumber()-1]);
+    rods[rodNumber].changeState(green);
+
+    for(int i = 0; i <= 2; ++i)
+        if(i != rodNumber){
+            if(rods[i].getDiscNumber() == 0 ||
+               rods[i].getTopDiscNumber() > rods[rodNumber].getTopDiscNumber())
+                rods[i].changeState(green);
+            else rods[i].changeState(red);
+        }
+}
+
+void moveDisc(int x, int y){
+    disc newDisc;
+    rods[x].changeTopState(discs[rods[x].getTopDiscNumber()-1]);
+    newDisc = rods[x].removeDisc();
+    rods[y].addDisc(newDisc);
+}
 
 void removeRemainingDiscs(){
     for(int i = 0; i <= 2; ++i)
@@ -324,6 +424,12 @@ void succesGameScreen(){}
 void launchSimulation(int numberOfDiscs){}
 void succesSimulationScreen(){}
 
+std::string numberToString(int number){
+    std::stringstream ss;
+    ss << number;
+    return ss.str();
+}
+
 void displayState(){
     window.clear();
     window.draw(background);
@@ -333,8 +439,10 @@ void displayState(){
 
     updateButtonState(exitButton);
 
-    for(int i = 0; i <= 2; ++i)
+    for(int i = 0; i <= 2; ++i){
+        if(rods[i].getState()) rods[i].drawState(window);
         rods[i].draw(window);
+    }
 
     window.display();
 }

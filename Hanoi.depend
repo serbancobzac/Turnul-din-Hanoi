@@ -1,11 +1,12 @@
 # depslib dependency file v1.0
-1484257535 source:f:\codsfac\an1\sem1\hanoi\main.cpp
+1484306978 source:f:\codsfac\an1\sem1\hanoi\main.cpp
 	"rod.h"
 	"disc.h"
 	"button.h"
 	<SFML/Audio.hpp>
+	<sstream>
 
-1484255363 f:\codsfac\an1\sem1\hanoi\include\rod.h
+1484306392 f:\codsfac\an1\sem1\hanoi\include\rod.h
 	<SFML/Graphics.hpp>
 	"disc.h"
 	<vector>
@@ -401,7 +402,7 @@
 1484255785 source:f:\codsfac\an1\sem1\hanoi\src\disc.cpp
 	"disc.h"
 
-1484257483 source:f:\codsfac\an1\sem1\hanoi\src\rod.cpp
+1484306390 source:f:\codsfac\an1\sem1\hanoi\src\rod.cpp
 	"rod.h"
 
 1429780453 f:\codsfac\an1\sem1\hanoi\sfml-2.3\include\sfml\audio.hpp

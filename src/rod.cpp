@@ -18,10 +18,12 @@ void rod::addDisc(disc newDisc){
     ++discNumber;
 }
 
-void rod::removeDisc(){
+disc rod::removeDisc(){
+    disc discCopy;
+    discCopy = discs[--discNumber];
     yCoordinate += 40;
     discs.pop_back();
-    --discNumber;
+    return discCopy;
 }
 
 void rod::draw(sf::RenderWindow& window){
@@ -29,6 +31,19 @@ void rod::draw(sf::RenderWindow& window){
         discs[i].draw(window);
 }
 
-void rod::drawState(sf::RenderWindow& window){}
+int rod::getTopDiscNumber(){
+    if(discNumber > 0) return discs[discNumber-1].getDiscNumber();
+    return 0;
+}
 
-void rod::changeState(int newState){}
+void rod::changeState(int newState){
+    if(newState == green){
+        state = green;
+        rodState.setTexture(greenStateTexture);
+    }
+    else    if(newState == red){
+                state = red;
+                rodState.setTexture(redStateTexture);
+            }
+            else state = neutral;
+}
