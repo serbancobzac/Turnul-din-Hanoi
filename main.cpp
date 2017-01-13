@@ -10,16 +10,17 @@ sf::SoundBuffer takeDiscBuffer, putDiscBuffer;
 sf::Sound takeDisc, putDisc;
 sf::Event event;
 sf::Font font1, font2;
-sf::Text text, firstRodIndicator, secondRodIndicator;
+sf::Text text, firstRodIndicator, secondRodIndicator, moves;
 sf::Image screenshot;
 sf::Clock timer;
 sf::Texture blurredBackgroundTexture, inputBoxTexture, titleTexture, descriereTextTexture, instructiuniTextTexture,
-            solutieTextTexture, codTextTexture, backgroundTexture, arrowTexture;
-sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText, background, arrow;
+            solutieTextTexture, codTextTexture, backgroundTexture, arrowTexture, congratsTexture;
+sf::Sprite  blurredBackground, inputBox, title, descriereText, instructiuniText, solutieText, codText, background, arrow, congrats;
 sf::Vector2f cursorPosition;
 
 std::vector <rod> rods;
 std::vector <sf::Texture> discs, activeDiscs;
+std::string score;
 
 button  invataButton, joacaButton, simuleazaButton, numarDiscuri, exitButton,
         instructiuniButton, descriereButton, solutieButton, aiciButton;
@@ -167,6 +168,17 @@ void loadResources(){
 
     backgroundTexture.loadFromFile("./files/images/background.png");
     background.setTexture(backgroundTexture);
+
+    congratsTexture.loadFromFile("./files/images/congrats.png");
+    congrats.setTexture(congratsTexture);
+    happyEnd.openFromFile("./files/audio/happyEnd.wav");
+    happyEnd.setVolume(50);
+    happyEnd.setLoop(true);
+
+    moves.setFont(font2);
+    moves.setCharacterSize(56);
+    moves.setOrigin(28, 28);
+    moves.setColor(sf::Color(58, 190, 0));
 }
 
 void uploadDiscs(std::string name, std::vector <sf::Texture> &discs){
@@ -420,7 +432,43 @@ void removeRemainingDiscs(){
             rods[i].removeDisc();
 }
 
-void succesGameScreen(){}
+void succesGameScreen(){
+    menuMusic.stop();
+    happyEnd.play();
+
+    score = numberToString(movesCounter);
+    moves.setString(score);
+    moves.setPosition(492, 350);
+
+    bool pressed = 0;
+
+    while(!pressed){
+        while(window.pollEvent(event))
+            switch (event.type){
+                case sf::Event::Closed:{
+                    window.close(); exit(0);
+                }
+                case sf::Event::KeyPressed:
+                    pressed = 1;
+                case sf::Event::MouseButtonPressed:
+                    if(event.mouseButton.button == sf::Mouse::Left &&
+                       exitButton.isMouseOverSprite(window)){
+                        pressed=1;
+                    }
+                default: break;
+            }
+        window.clear();
+        window.draw(blurredBackground);
+        window.draw(congrats);
+        window.draw(moves);
+        updateButtonState(exitButton);
+        window.display();
+    }
+
+    happyEnd.stop();
+    menuMusic.play();
+}
+
 void launchSimulation(int numberOfDiscs){}
 void succesSimulationScreen(){}
 
