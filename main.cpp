@@ -20,12 +20,12 @@ sf::Vector2f cursorPosition;
 
 std::vector <rod> rods;
 std::vector <sf::Texture> discs, activeDiscs;
-std::string score;
+std::string s;
 
 button  invataButton, joacaButton, simuleazaButton, numarDiscuri, exitButton,
-        instructiuniButton, descriereButton, solutieButton, aiciButton;
+        instructiuniButton, descriereButton, solutieButton, aiciButton, fastForwardButton;
 
-int numberOfDiscs, movesCounter;
+int numberOfDiscs, movesCounter, ff, inSimulation;
 
 void loadResources();
 void uploadDiscs(std::string name, std::vector <sf::Texture> &discs);
@@ -42,6 +42,8 @@ void removeRemainingDiscs();
 void succesGameScreen();
 
 void launchSimulation(int numberOfDiscs);
+void generateSimulationMoves(int numberOfDiscs, int initialRod, int finalRod);
+void updateMove(sf::Text &rodIndicator, int rod);
 void succesSimulationScreen();
 
 std::string numberToString(int number);
@@ -179,6 +181,9 @@ void loadResources(){
     moves.setCharacterSize(56);
     moves.setOrigin(28, 28);
     moves.setColor(sf::Color(58, 190, 0));
+
+    // simulare
+    fastForwardButton.load("./files/images/fastForward.png", "./files/images/fastForwardActive.png", 50, 50, 765, 35);
 }
 
 void uploadDiscs(std::string name, std::vector <sf::Texture> &discs){
@@ -436,9 +441,14 @@ void succesGameScreen(){
     menuMusic.stop();
     happyEnd.play();
 
-    score = numberToString(movesCounter);
-    moves.setString(score);
+    s = numberToString(movesCounter);
+    moves.setString(s);
     moves.setPosition(492, 350);
+
+    window.clear();
+    window.draw(blurredBackground);
+    window.draw(congrats);
+    window.draw(moves);
 
     bool pressed = 0;
 
@@ -457,10 +467,7 @@ void succesGameScreen(){
                     }
                 default: break;
             }
-        window.clear();
-        window.draw(blurredBackground);
-        window.draw(congrats);
-        window.draw(moves);
+
         updateButtonState(exitButton);
         window.display();
     }
@@ -469,7 +476,75 @@ void succesGameScreen(){
     menuMusic.play();
 }
 
-void launchSimulation(int numberOfDiscs){}
+void launchSimulation(int numberOfDiscs){
+    disc newDisc;
+    for(int i = numberOfDiscs-1; i >= 0; --i){
+        newDisc.setDiscTexture(discs[i]);
+        newDisc.setDiscNumber(i+1);
+        rods[0].addDisc(newDisc);
+    }
+
+    inSimulation = 1; ff = 1; movesCounter = 0;
+    generateSimulationMoves(numberOfDiscs, 1, 3);
+    inSimulation = 0;
+
+    removeRemainingDiscs();
+}
+
+void generateSimulationMoves(int numberOfDiscs, int initialRod, int finalRod){
+    while(13){
+        while (window.pollEvent(event))
+            switch (event.type){
+                case sf::Event::Closed:{
+                    window.close(); exit(0);
+                }
+                case sf::Event::MouseButtonPressed:{
+                    if(event.mouseButton.button == sf::Mouse::Left &&
+                       fastForwardButton.isMouseOverSprite(window)) ff = 0;
+                }
+                default: break;
+            }
+        if(numberOfDiscs > 0){
+            generateSimulationMoves(numberOfDiscs-1, initialRod, 6-initialRod-finalRod);
+
+            firstRodIndicator.setString("");
+            secondRodIndicator.setString("");
+
+            updateMove(firstRodIndicator, initialRod);
+            updateMove(secondRodIndicator, finalRod);
+
+
+            moveDisc(initialRod-1, finalRod-1);
+            ++movesCounter;
+
+
+            rods[initialRod-1].changeTopState(discs[rods[initialRod-1].getTopDiscNumber()-1]);
+            rods[finalRod-1].changeState(0);
+
+            displayState();
+
+            timer.restart();
+            while(ff && timer.getElapsedTime().asSeconds() <= 0.5);
+
+            generateSimulationMoves(numberOfDiscs-1, 6-initialRod-finalRod, finalRod);
+        }
+        return;
+    }
+}
+
+void updateMove(sf::Text &rodIndicator, int rod){
+    s = numberToString(rod);
+    rodIndicator.setString(s);
+
+    if(rodIndicator.getString() == firstRodIndicator.getString()) rods[rod-1].changeTopState(activeDiscs[rods[rod-1].getTopDiscNumber()-1]);
+    else rods[rod-1].changeState(1);
+
+    displayState();
+
+    timer.restart();
+    while(ff && timer.getElapsedTime().asSeconds() <= 0.5);
+}
+
 void succesSimulationScreen(){}
 
 std::string numberToString(int number){
@@ -485,7 +560,8 @@ void displayState(){
     window.draw(arrow);
     window.draw(secondRodIndicator);
 
-    updateButtonState(exitButton);
+    if(inSimulation) updateButtonState(fastForwardButton);
+    else updateButtonState(exitButton);
 
     for(int i = 0; i <= 2; ++i){
         if(rods[i].getState()) rods[i].drawState(window);
